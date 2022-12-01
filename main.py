@@ -49,41 +49,55 @@ def sort_click():
     lb_values.place(relx=0.51, rely=0.07, relwidth=0.45)
 
     sorter_button = Button(text="Сортировать", master=sw, command=sort, font=("Moscow Sans", 16))
-    sorter_button.place(relx=0.35,rely=0.5)
+    sorter_button.place(relx=0.4,rely=0.6)
 
     sw.mainloop()
 
 def sort():
     global cur_list
-    if sel == 2 or sel == 3:
-        db = list(cursor.execute("SELECT * FROM Rayoni"))
-        l = list()
-        for i in db:
-            if sel == 2:
-                l.append(i[1])
-            else:
-                l.append(i[4])
-        l.sort(reverse=(lb_values.curselection()[0] == 1))
-        cur_list.clear()
-        lb_name.delete(0, "end")
-        for n in range(len(l)):
-            if sel == 2:
-                line = list(cursor.execute(f"SELECT * FROM Rayoni WHERE naselenie={l[n]}"))
-            else:
-                line = list(cursor.execute(f"SELECT * FROM Rayoni WHERE ploshad={l[n]}"))
-            lb_name.insert(n, line[0][0])
-            for i in line:
-                cur_list.append(i)
-    elif sel == 0:
-        ao = ("ЦАО", "САО", "СВАО", "ВАО", "ЮВАО", "ЮАО", "ЮЗАО", "ЗАО", "СЗАО", "ТиНАО")
-        selected = int(lb_values.curselection()[0])
-        res = list(cursor.execute(f"SELECT * FROM Rayoni WHERE okrug=\"{ao[selected]}\""))
-        lb_name.delete(0, "end")
-        for i in range(len(res)):
-            line = res[i][0]
-            lb_name.insert(i,line)
-        cur_list = res
-
+    try:
+        if sel == 2 or sel == 3:
+            db = list(cursor.execute("SELECT * FROM Rayoni"))
+            l = list()
+            for i in db:
+                if sel == 2:
+                    l.append(i[1])
+                else:
+                    l.append(i[4])
+            l.sort(reverse=(lb_values.curselection()[0] == 1))
+            cur_list.clear()
+            lb_name.delete(0, "end")
+            for n in range(len(l)):
+                if sel == 2:
+                    line = list(cursor.execute(f"SELECT * FROM Rayoni WHERE naselenie={l[n]}"))
+                else:
+                    line = list(cursor.execute(f"SELECT * FROM Rayoni WHERE ploshad={l[n]}"))
+                lb_name.insert(n, line[0][0])
+                for i in line:
+                    cur_list.append(i)
+        elif sel == 0:
+            ao = ("ЦАО", "САО", "СВАО", "ВАО", "ЮВАО", "ЮАО", "ЮЗАО", "ЗАО", "СЗАО", "ТиНАО")
+            selected = int(lb_values.curselection()[0])
+            res = list(cursor.execute(f"SELECT * FROM Rayoni WHERE okrug=\"{ao[selected]}\""))
+            lb_name.delete(0, "end")
+            for i in range(len(res)):
+                line = res[i][0]
+                lb_name.insert(i,line)
+            cur_list = res
+        elif sel == 1:
+            lines = ("①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","D1", "D2", "Ленинградское", "Казанское", "Киевское", "Волоколамское", "Ярославское", "Павелецкое")
+            selected = int(lb_values.curselection()[0])
+            res = list(cursor.execute(f"SELECT * FROM Rayoni WHERE transport LIKE \"%{lines[selected]}%\""))
+            lb_name.delete(0, "end")
+            for i in range(len(res)):
+                line = res[i][0]
+                lb_name.insert(i,line)
+            cur_list = res
+        messagebox.showinfo("Успех", "Сортировка успешно завершена.")
+    except NameError:
+        messagebox.showerror("Ошибка", "Не указаны критерии сортировки.")
+    except:
+        messagebox.showerror("Ошибка", "Во время сортировки произошла ошибка.")
 
 def lb_keys_select(*args):
     global sel
