@@ -8,9 +8,9 @@ def click():
         messagebox.showerror("Ошибка", "Не выбран район.\nНажмите на любой район в списке,\nчтобы его выбрать.")
     rayon = list()
     try:
-        for n in range(len(list(cursor.execute("SELECT * FROM Rayoni")))):
+        for n in range(len(cur_list)):
             if n == lb_name.index(sel[0]):
-                rayon = list(cursor.execute("SELECT * FROM Rayoni"))[n]
+                rayon = cur_list[n]
         messagebox.showinfo(f"Информация о районе {rayon[0]}", f'''Название: {rayon[0]}
 ----------------------------------
 Население: {rayon[1]} человек
@@ -27,11 +27,112 @@ def click():
 
 
 def sort_click():
-    pass
+    global sw, lb_keys, lb_values
+    sw = Tk()
+    sw.geometry("800x500")
+    sw.resizable(False, False)
+    sw.title("Сортировка")
+
+    Label(text="Признак", master=sw, font=("Moscow Sans", 16)).place(relx=0.01,rely=0.02)
+    lb_keys = Listbox(master=sw, font=("Moscow Sans", 16))
+
+    lb_keys.insert(0, "Административный округ")
+    lb_keys.insert(1, "Развитость транспорта")
+    lb_keys.insert(2, "Население")
+    lb_keys.insert(3, "Площадь")
+
+    Label(text="Значения", master=sw, font=("Moscow Sans", 16)).place(relx=0.51, rely=0.02)
+    lb_values = Listbox(master=sw, font=("Moscow Sans", 16))
+
+    lb_keys.place(relx=0.01, rely=0.07,relwidth=0.45)
+    lb_keys.bind("<<ListboxSelect>>", lb_keys_select)
+    lb_values.place(relx=0.51, rely=0.07, relwidth=0.45)
+
+    sorter_button = Button(text="Сортировать", master=sw, command=sort, font=("Moscow Sans", 16))
+    sorter_button.place(relx=0.35,rely=0.5)
+
+    sw.mainloop()
+
+def sort():
+    global cur_list
+    if sel == 2 or sel == 3:
+        db = list(cursor.execute("SELECT * FROM Rayoni"))
+        l = list()
+        for i in db:
+            if sel == 2:
+                l.append(i[1])
+            else:
+                l.append(i[4])
+        l.sort(reverse=(lb_values.curselection()[0] == 1))
+        cur_list.clear()
+        lb_name.delete(0, "end")
+        for n in range(len(l)):
+            if sel == 2:
+                line = list(cursor.execute(f"SELECT * FROM Rayoni WHERE naselenie={l[n]}"))
+            else:
+                line = list(cursor.execute(f"SELECT * FROM Rayoni WHERE ploshad={l[n]}"))
+            lb_name.insert(n, line[0][0])
+            for i in line:
+                cur_list.append(i)
+    elif sel == 0:
+        ao = ("ЦАО", "САО", "СВАО", "ВАО", "ЮВАО", "ЮАО", "ЮЗАО", "ЗАО", "СЗАО", "ТиНАО")
+        selected = int(lb_values.curselection()[0])
+        res = list(cursor.execute(f"SELECT * FROM Rayoni WHERE okrug=\"{ao[selected]}\""))
+        lb_name.delete(0, "end")
+        for i in range(len(res)):
+            line = res[i][0]
+            lb_name.insert(i,line)
+        cur_list = res
+
+
+def lb_keys_select(*args):
+    global sel
+    try:
+        sel = lb_keys.curselection()[0]
+        lb_values.delete(0, "end")
+        if sel == 0:
+            lb_values.insert(0, "ЦАО")
+            lb_values.insert(1, "САО")
+            lb_values.insert(2, "СВАО")
+            lb_values.insert(3, "ВАО") 
+            lb_values.insert(4, "ЮВАО")
+            lb_values.insert(5, "ЮАО")
+            lb_values.insert(6, "ЮЗАО")
+            lb_values.insert(7, "ЗАО")
+            lb_values.insert(8, "СЗАО")
+            lb_values.insert(9, "ТиНАО")
+        elif sel == 1:
+            lb_values.insert(0, "①Сокольническая линия")
+            lb_values.insert(1, "②Замоскворецкая линия")
+            lb_values.insert(2, "③Арбатско-Покровская линия")
+            lb_values.insert(3, "④Филёвская линия")
+            lb_values.insert(4, "⑤Кольцевая линия")
+            lb_values.insert(5, "⑥Калужско-Рижская линия")
+            lb_values.insert(6, "⑦Таганско-Краснопресненская линия")
+            lb_values.insert(7, "⑧Калиниская и Солнцевская линии")
+            lb_values.insert(8, "⑨Серпуховско-Тимирязевская линия")
+            lb_values.insert(9, "⑩Люблинско-Дмитровская линия")
+            lb_values.insert(10, "⑪Большая Кольцевая линия")
+            lb_values.insert(11, "⑫Бутовская линия")
+            lb_values.insert(12, "⑬Монорельс")
+            lb_values.insert(13, "⑭МЦК")
+            lb_values.insert(14, "⑮Некрасовская линия")
+            lb_values.insert(15, "D1 / Белорусско-Савёловский")
+            lb_values.insert(16, "D2 / Курско-Рижский")
+            lb_values.insert(17, "Ленинградское направление МЖД")
+            lb_values.insert(18, "Казанское направление МЖД")
+            lb_values.insert(19, "Киевское направление МЖД")
+            lb_values.insert(20, "Волоколамское направление МЖД")
+            lb_values.insert(21, "Ярославское направление МЖД")
+            lb_values.insert(22, "Павелецкое направление МЖД")
+        elif (sel == 2) or (sel == 3):
+            lb_values.insert(0, "По возрастанию")
+            lb_values.insert(1, "По убыванию")
+    except:
+        print("ERROR")
 
 
 
-areas = list()
 line = ""
 
 connection = sqlite3.connect('districts.db')
@@ -44,6 +145,9 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS Rayoni
     transport TEXT,
     ploshad INT
 )''')
+
+cur_list = list()
+
 rayoni = [
     ('Академический', 110161, 'ЮЗАО', 'Метро ⑥Академическая, ⑥Профсоюзная\n4 трамвайных маршрутов\n31 автобусный маршрут', 557),
     ('Алексеевский', 79193, 'СВАО', 'Метро ⑥ВДНХ, ⑥Алексеевская\n2 трамвайного маршрута\n24 автобусных маршрутов', 529),
@@ -96,7 +200,9 @@ sort_button = Button(text="Сортировать по...", command=sort_click, 
 
 for n in range(len(list(cursor.execute("SELECT * FROM Rayoni")))):
     line = list(cursor.execute("SELECT * FROM Rayoni"))[n]
+    cur_list.append(tuple(cursor.execute("SELECT * FROM Rayoni"))[n])
     lb_name.insert(n,line[0])
+print(cur_list)
 
 Label(text="Названия",font=("Moscow Sans", 24)).place(relx=0.001, rely=0.001)
 lb_name.place(relx=0.001,rely=0.101,relheight=0.8)
