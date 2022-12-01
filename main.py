@@ -1,4 +1,38 @@
 import sqlite3
+from tkinter import *
+from tkinter import messagebox
+
+def click():
+    sel = lb_name.curselection()
+    if sel == tuple():
+        messagebox.showerror("Ошибка", "Не выбран район.\nНажмите на любой район в списке,\nчтобы его выбрать.")
+    rayon = list()
+    try:
+        for n in range(len(list(cursor.execute("SELECT * FROM Rayoni")))):
+            if n == lb_name.index(sel[0]):
+                rayon = list(cursor.execute("SELECT * FROM Rayoni"))[n]
+        messagebox.showinfo(f"Информация о районе {rayon[0]}", f'''Название: {rayon[0]}
+----------------------------------
+Население: {rayon[1]} человек
+----------------------------------
+Административный округ: {rayon[2]}
+----------------------------------
+Транспортная доступность:
+{rayon[3]}
+----------------------------------
+Площадь: {rayon[4]} гектар
+        ''')
+    except:
+        print('NO')
+
+
+def sort_click():
+    pass
+
+
+
+areas = list()
+line = ""
 
 connection = sqlite3.connect('districts.db')
 cursor = connection.cursor()
@@ -40,8 +74,9 @@ rayoni = [
     ('Дмитровский', 92656, 'САО', 'D1 Марк', 729),
     ('Донской', 50460, 'ЮАО', 'Метро ⑥Шаболовская, ⑥Ленинский проспект, ⑭Верхние Котлы, ⑭Крымская\n9 трамвайных маршрутов\n24 автобусных маршрутов', 573),
     ('Дорогомилово', 75105, 'ЗАО', 'Метро ③④⑤Киевская, ③⑧Парк Победы, ④Студенческая, ④⑭Кутузовская, ⑧Минская\nD1 Фили, Киевский вокзал\n28 автобусных маршрутов', 793),
-    ('Замоскворечье', 58665, 'ЦАО', '②Новокузнецкая, ②⑤Павелецкая, ⑤Добрынинская, ⑥⑧Третьяковская, ⑨Серпуховская\nПавелецкий вокзал\n5 трамвайных маршрутов\n16 автобусных маршрутов', 432)
+    ('Замоскворечье', 58665, 'ЦАО', 'Метро ②Новокузнецкая, ②⑤Павелецкая, ⑤Добрынинская, ⑥⑧Третьяковская, ⑨Серпуховская\nПавелецкий вокзал\n5 трамвайных маршрутов\n16 автобусных маршрутов', 432)
 ]
+
 
 for n in rayoni:
     if n not in list(cursor.execute('SELECT * FROM Rayoni')):
@@ -50,3 +85,22 @@ for n in rayoni:
         print('Добавлено')
     else:
         print(f'{n} уже добавлен в базу данных')
+
+tk = Tk()
+tk.title("Районы")
+tk.geometry("800x600")
+tk.resizable(False, False)
+lb_name = Listbox(font=("Moscow Sans", 24))
+get_button =  Button(text="Выбрать", command=click, font=("Moscow Sans", 20))
+sort_button = Button(text="Сортировать по...", command=sort_click, font=("Moscow Sans",20))
+
+for n in range(len(list(cursor.execute("SELECT * FROM Rayoni")))):
+    line = list(cursor.execute("SELECT * FROM Rayoni"))[n]
+    lb_name.insert(n,line[0])
+
+Label(text="Названия",font=("Moscow Sans", 24)).place(relx=0.001, rely=0.001)
+lb_name.place(relx=0.001,rely=0.101,relheight=0.8)
+get_button.place(relx=0.65, rely=0.25)
+sort_button.place(relx=0.575,rely=0.50)
+
+tk.mainloop()
